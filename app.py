@@ -166,8 +166,8 @@ def health():
     return jsonify({'status':'ok'})
 
 
-@app.route('/login', methods=['GET','POST'])
-def login():
+@app.route('/login')
+def login_redirect():
     return redirect(url_for('dashboard'))
 
 
@@ -179,7 +179,7 @@ def logout():
         conn.execute('DELETE FROM wizard_drafts WHERE user_id=?', (session['user_id'],))
     session.clear()
     flash('Vous êtes déconnecté.', 'success')
-    return redirect(url_for('login'))
+    return redirect(url_for('dashboard'))
 
 
 @app.route('/')

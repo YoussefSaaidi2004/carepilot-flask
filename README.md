@@ -32,10 +32,9 @@ pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
-Ouvrez `.env`, puis collez une clé aléatoire générée avec `python -c "import secrets; print(secrets.token_urlsafe(48))"` dans `SECRET_KEY`. Puis créez le compte local :
+Ouvrez `.env`, puis collez une clé aléatoire générée avec `python -c "import secrets; print(secrets.token_urlsafe(48))"` dans `SECRET_KEY`. L’application fonctionne en mode local et ouvre directement le dashboard ; aucun écran de connexion n’est requis :
 
 ```powershell
-flask --app app create-admin
 python app.py
 ```
 
