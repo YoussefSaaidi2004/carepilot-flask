@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% from '_icons.html' import icon %}
+{% block title %}Vue d’ensemble{% endblock %}
+{% block breadcrumb %}Vue d’ensemble{% endblock %}
+{% block content %}
+<div class="page-heading animate-in">
+  <div><div class="eyebrow"><span class="eyebrow-dot"></span> ESPACE CLINIQUE <span class="slash">/</span> ACCUEIL</div><h1>Bienvenue dans CarePilot <span class="heading-wave">—</span></h1><p class="page-subtitle">Vos outils d’analyse et vos dernières évaluations, réunis au même endroit.</p></div>
+  <a class="btn btn-primary" href="{{ url_for('tasks_page') }}">{{ icon('plus',18) }} Nouvelle évaluation</a>
+</div>
+
+<div class="dashboard-hero animate-in delay-1">
+  <div class="hero-copy"><div class="hero-kicker">VOTRE ESPACE D’AIDE À L’ANALYSE</div><h2>Du signal aux<br><span>décisions mieux préparées.</span></h2><p>Explorez les données du dossier, comparez les signaux utiles et gardez une trace claire de chaque analyse.</p><a class="hero-link" href="{{ url_for('tasks_page') }}">Explorer les modules {{ icon('arrow-right',17) }}</a></div>
+  <div class="hero-illustration" aria-hidden="true"><div class="orb orb-a"></div><div class="orb orb-b"></div><div class="hero-ring ring-a"></div><div class="hero-ring ring-b"></div><div class="hero-crosshair cross-a"></div><div class="hero-crosshair cross-b"></div><div class="hero-data-card data-card-one"><span class="mini-card-icon">{{ icon('activity',15) }}</span><span class="data-card-label">Flux clinique</span><strong>Analyse guidée</strong><div class="tiny-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="hero-data-card data-card-two"><span class="data-card-label">Traçabilité</span><strong>{{ icon('check-circle',16) }} Activée</strong><small>Historique des analyses</small></div><div class="hero-halo"></div><div class="hero-center-mark"><span class="brand-cross"></span></div></div>
+</div>
+
+<div class="section-header animate-in delay-2"><div><h2>Activité récente</h2><p>Indicateurs de fonctionnement, pas des métriques de performance clinique.</p></div><a class="text-link" href="{{ url_for('reports') }}">Voir les rapports {{ icon('chevron-right',16) }}</a></div>
+<div class="stats-grid animate-in delay-2">
+  <article class="stat-card"><div class="stat-top"><span class="stat-icon tint-cyan">{{ icon('activity',19) }}</span><span class="stat-label">Évaluations enregistrées</span></div><div class="stat-value">{{ total }}</div><div class="stat-bottom"><span class="stat-neutral">Depuis l’installation</span><span class="stat-spark spark-cyan"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div></article>
+  <article class="stat-card"><div class="stat-top"><span class="stat-icon tint-violet">{{ icon('clock',19) }}</span><span class="stat-label">Aujourd’hui</span></div><div class="stat-value">{{ today }}</div><div class="stat-bottom"><span class="stat-neutral">Nouveaux calculs</span><span class="stat-trend">Local</span></div></article>
+  <article class="stat-card"><div class="stat-top"><span class="stat-icon tint-emerald">{{ icon('grid',19) }}</span><span class="stat-label">Modules disponibles</span></div><div class="stat-value">06</div><div class="stat-bottom"><span class="stat-neutral">Modèles exploratoires</span><span class="live-pill"><i></i> Chargés</span></div></article>
+  <article class="stat-card"><div class="stat-top"><span class="stat-icon tint-amber">{{ icon('users-round',19) }}</span><span class="stat-label">Comptes staff</span></div><div class="stat-value">{{ users }}</div><div class="stat-bottom"><span class="stat-neutral">Comptes locaux</span><a class="small-link" href="{{ url_for('settings') }}">Gérer {{ icon('chevron-right',13) }}</a></div></article>
+</div>
+
+<div class="section-header module-section-head animate-in delay-3"><div><h2>Vos modules</h2><p>Choisissez le parcours le mieux adapté à la question du moment.</p></div><a class="text-link" href="{{ url_for('tasks_page') }}">Tous les modules {{ icon('chevron-right',16) }}</a></div>
+<div class="module-grid animate-in delay-3">
+{% for item in task_counts %}
+  <a class="module-card" href="{{ url_for('start_task', task_id=item.id) }}"><div class="module-card-top"><span class="module-icon icon-bg-{{ item.color }}">{{ icon(item.icon,21) }}</span><span class="module-open">{{ icon('arrow-right',17) }}</span></div><span class="module-overline">{{ item.group }}</span><h3>{{ task_lookup[item.id].title }}</h3><p>{{ task_lookup[item.id].description }}</p><div class="module-card-footer"><span>{{ icon('clock',14) }} Parcours en 6 étapes</span><span>{{ item.count }} analyse{% if item.count != 1 %}s{% endif %}</span></div></a>
+{% endfor %}
+</div>
+
+<div class="bottom-grid animate-in delay-4">
+  <section class="panel-card recent-panel"><div class="panel-title-row"><div><h2>Dernières évaluations</h2><p>Historique minimal des résultats</p></div><a href="{{ url_for('patients') }}" class="text-link">Tout voir {{ icon('chevron-right',15) }}</a></div>
+    {% if recent %}<div class="recent-list">{% for row in recent %}<a class="recent-row" href="{{ url_for('assessment_detail', record_id=row['id']) }}"><span class="recent-symbol icon-bg-{{ task_lookup[row['task_id']]['color'] }}">{{ icon(task_lookup[row['task_id']]['icon'],17) }}</span><span class="recent-copy"><strong>{{ task_lookup[row['task_id']]['short'] }}</strong><small>{% if row['patient_ref'] %}Réf. {{ row['patient_ref'] }}{% else %}Réf. non renseignée{% endif %} · {{ row['created_at'][:16]|replace('T',' ') }}</small></span><span class="recent-result">{{ row['result_label'] }}</span>{{ icon('chevron-right',15,'recent-chevron') }}</a>{% endfor %}</div>{% else %}<div class="empty-state compact-empty">{{ icon('folder',26) }}<strong>Aucune évaluation pour le moment</strong><p>Démarrez un module pour voir apparaître votre historique ici.</p><a href="{{ url_for('tasks_page') }}" class="btn btn-secondary btn-sm">Choisir un module {{ icon('arrow-right',15) }}</a></div>{% endif %}
+  </section>
+  <aside class="panel-card guardrail-panel"><div class="guardrail-mark">{{ icon('shield-check',23) }}</div><div class="eyebrow">GARDE-FOUS</div><h2>L’IA assiste.<br>Le clinicien décide.</h2><p>Les modèles sont issus de notebooks exploratoires. Une sortie doit être confrontée aux données réelles et au contexte clinique.</p><div class="guardrail-list"><div>{{ icon('check-circle',16) }} Les résultats sont tracés</div><div>{{ icon('check-circle',16) }} Les saisies sont validées côté serveur</div><div>{{ icon('circle-alert',16) }} Validation externe non réalisée</div></div><a href="{{ url_for('settings') }}" class="text-link">Lire les limites et réglages {{ icon('arrow-right',16) }}</a></aside>
+</div>
+{% endblock %}

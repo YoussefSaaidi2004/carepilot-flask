@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% from '_icons.html' import icon %}
+{% block title %}{{ task.title }} · Étape {{ step }}{% endblock %}
+{% block breadcrumb %}<a href="{{ url_for('tasks_page') }}">Modules IA</a> {{ icon('chevron-right',14) }} {{ task.title }}{% endblock %}
+{% block content %}
+<div class="wizard-page animate-in">
+  <div class="wizard-back-row"><a class="back-link" href="{{ url_for('tasks_page') }}">{{ icon('arrow-left',16) }} Tous les modules</a><span class="confidential-label">{{ icon('lock-keyhole',14) }} Évaluation locale</span></div>
+  <div class="wizard-head"><div class="wizard-title-zone"><span class="module-icon icon-bg-{{ task.color }}">{{ icon(task.icon,24) }}</span><div><div class="eyebrow">{{ task.group|upper }}</div><h1>{{ task.title }}</h1><p>{{ task.description }}</p></div></div><div class="wizard-model-badge"><small>MODÈLE</small><strong>{{ task.model }}</strong><span class="model-state"><i></i> Chargé</span></div></div>
+  <div class="stepper-card"><div class="stepper-topline"><div><span class="step-counter">ÉTAPE {{ step }} <span>/ 6</span></span><h2>{{ step_meta.title }}</h2></div><span class="step-percent">{{ ((step / 6) * 100)|int }}% <small>complété</small></span></div><div class="step-progress"><span style="width:{{ ((step / 6) * 100)|int }}%"></span></div><div class="step-track">
+    {% for n in range(1,7) %}<div class="track-step {% if n < step %}done{% elif n == step %}current{% endif %}"><span class="track-marker">{% if n < step %}{{ icon('check',13) }}{% else %}{{ n }}{% endif %}</span><span>{{ step_titles[n] }}</span></div>{% endfor %}
+  </div></div>
+
+  {% if errors %}<div class="validation-alert" role="alert">{{ icon('circle-alert',19) }}<div><strong>Quelques points à corriger</strong><ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div></div>{% endif %}
+
+  {% if step <= 4 %}
+    <form method="post" class="wizard-form" novalidate data-validate-form>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <section class="form-panel"><div class="form-panel-heading"><div><span class="form-kicker">{{ step_meta.title|upper }}</span><h2>{% if step == 1 %}Définissons le contexte{% elif step == 2 %}Une admission bien décrite{% elif step == 3 %}Les données utiles au modèle{% else %}Recours antérieurs et traitement{% endif %}</h2><p>{{ step_meta.subtitle }}</p></div><span class="panel-step-icon">{{ icon(step_meta.icon,22) }}</span></div>
+        {% if step == 1 %}<div class="patient-ref-field"><div class="ref-icon">{{ icon('folder',18) }}</div><div class="ref-copy"><label for="patient_ref">Référence interne pseudonymisée <span class="optional-label">Facultatif</span></label><small>Pas de nom, de numéro national ni de date de naissance. Exemple : DOS-0427.</small></div><input id="patient_ref" name="patient_ref" type="text" maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9._-]{0,31}" placeholder="DOS-0427" value="{{ payload.get('patient_ref','') }}" autocomplete="off"></div>{% endif %}
+        {% if fields %}
+          <div class="field-grid {% if fields|length == 1 %}field-grid-single{% endif %}">
+          {% for field in fields %}{% set current = payload.get(field.name, '') %}
+            <div class="field-block field-{{ field.type }} {% if field.type == 'medication' %}medication-block{% endif %} {% if field.name in ['diag_1','diag_2','diag_3','medical_specialty'] %}field-wide{% endif %}" data-field-block data-field-name="{{ field.name }}">
+              {% if field.type == 'medication' %}
+                <div class="med-label-row"><label>{{ field.label }}</label><span class="med-state-label">Traitement</span></div>
+                <div class="med-choice-row" role="radiogroup" aria-label="{{ field.label }}">
+                  {% for option in field.options %}<label class="med-choice {% if current == option %}selected{% endif %}"><input type="radio" name="{{ field.name }}" value="{{ option }}" {% if current == option %}checked{% endif %} {% if loop.first %}required{% endif %}><span>{{ {'Inconnu':'Non documenté','No':'Non','Steady':'Stable','Up':'Augmenté','Down':'Diminué'}.get(option,option) }}</span></label>{% endfor %}
+                </div>
+              {% elif field.type == 'cards' %}
+                <div class="field-label-row"><label>{{ field.label }} <span class="required-dot">*</span></label>{% if field.hint %}<span class="field-hint-icon" title="{{ field.hint }}">{{ icon('info',14) }}</span>{% endif %}</div>
+                <div class="choice-card-grid {% if field.name == 'age' %}age-card-grid{% elif field.name == 'race' %}race-card-grid{% endif %}" role="radiogroup" aria-label="{{ field.label }}">
+                  {% for option in field.options %}<label class="choice-card {% if current == option %}selected{% endif %}"><input type="radio" name="{{ field.name }}" value="{{ option }}" {% if current == option %}checked{% endif %} required><span class="choice-card-title">{{ option if field.name != 'age' else option|replace('[','')|replace(')','')|replace('-', ' – ')|replace(' – 10',' à 10 ans')|replace(' – 20',' à 20 ans')|replace(' – 30',' à 30 ans')|replace(' – 40',' à 40 ans')|replace(' – 50',' à 50 ans')|replace(' – 60',' à 60 ans')|replace(' – 70',' à 70 ans')|replace(' – 80',' à 80 ans')|replace(' – 90',' à 90 ans')|replace(' – 100',' à 100 ans') }}</span><span class="choice-card-check">{{ icon('check',12) }}</span></label>{% endfor %}
+                </div>
+              {% elif field.type == 'segmented' %}
+                <div class="field-label-row"><label for="{{ field.name }}">{{ field.label }} <span class="required-dot">*</span></label></div>
+                <div class="segmented-options" role="radiogroup" aria-label="{{ field.label }}">
+                  {% for option in field.options %}<label class="segmented-option {% if current == option %}selected{% endif %}"><input type="radio" name="{{ field.name }}" value="{{ option }}" {% if current == option %}checked{% endif %} required><span>{% if field.name == 'A1Cresult' %}{{ {'Inconnu':'Non documenté','None':'Non réalisé','Norm':'Normal','>7':'> 7 %','>8':'> 8 %'}.get(option,option) }}{% elif field.name == 'max_glu_serum' %}{{ {'Inconnu':'Non documenté','None':'Non réalisé','Norm':'Normal','>200':'> 200','>300':'> 300'}.get(option,option) }}{% elif field.name == 'change' %}{{ {'Inconnu':'Non documenté','No':'Aucun changement','Ch':'Changement'}.get(option,option) }}{% elif field.name == 'diabetesMed' %}{{ {'Inconnu':'Non documenté','No':'Non','Yes':'Oui'}.get(option,option) }}{% else %}{{ option }}{% endif %}</span></label>{% endfor %}
+                </div>
+              {% elif field.type == 'number' %}
+                <div class="field-label-row"><label for="{{ field.name }}">{{ field.label }} <span class="required-dot">*</span></label><span class="numeric-range">{{ field.min }}—{{ field.max }}</span></div>
+                <div class="numeric-field-wrap"><div class="number-control"><button type="button" class="number-step" data-number-step="-1" aria-label="Diminuer {{ field.label }}" {% if current == 'Inconnu' %}disabled{% endif %}>−</button><input id="{{ field.name }}" name="{{ field.name }}" type="number" inputmode="numeric" step="1" min="{{ field.min }}" max="{{ field.max }}" required value="{{ '' if current == 'Inconnu' else current }}" placeholder="Saisir une valeur" data-number-input {% if current == 'Inconnu' %}disabled{% endif %}><button type="button" class="number-step" data-number-step="1" aria-label="Augmenter {{ field.label }}" {% if current == 'Inconnu' %}disabled{% endif %}>+</button></div><label class="unknown-toggle"><input type="checkbox" data-toggle-unknown="{{ field.name }}" {% if current == 'Inconnu' %}checked{% endif %}><span>Valeur non documentée</span></label><input type="hidden" name="{{ field.name }}" value="Inconnu" data-unknown-hidden="{{ field.name }}" {% if current != 'Inconnu' %}disabled{% endif %}></div>
+              {% elif field.type == 'search' %}
+                <div class="field-label-row"><label for="{{ field.name }}">{{ field.label }} <span class="required-dot">*</span></label><span class="search-hint">Recherche assistée</span></div>
+                <div class="search-select-wrap">{{ icon('search',17) }}<input id="{{ field.name }}" name="{{ field.name }}" type="text" list="list_{{ field.name }}" value="{{ current }}" required autocomplete="off" placeholder="Commencer à saisir le code…" data-strict-list="list_{{ field.name }}"><datalist id="list_{{ field.name }}">{% for option in field.options %}<option value="{{ option }}"></option>{% endfor %}</datalist></div>
+              {% else %}
+                <div class="field-label-row"><label for="{{ field.name }}">{{ field.label }} <span class="required-dot">*</span></label>{% if field.hint %}<span class="field-hint-icon" title="{{ field.hint }}">{{ icon('info',14) }}</span>{% endif %}</div>
+                <div class="select-wrap"><select id="{{ field.name }}" name="{{ field.name }}" required><option value="">Choisir une valeur…</option>{% for option in field.options %}<option value="{{ option }}" {% if current == option %}selected{% endif %}>{{ option }}</option>{% endfor %}</select><span class="select-caret">⌄</span></div>
+              {% endif %}
+              {% if field.hint and field.type not in ['medication','cards','segmented'] %}<p class="field-hint">{{ field.hint }}</p>{% endif %}
+            </div>
+          {% endfor %}
+          </div>
+        {% else %}
+          <div class="step-insight-panel"><div class="insight-illustration">{{ icon(task.icon,29) }}<span></span></div><div><span class="eyebrow">ÉTAPE DOCUMENTAIRE</span><h3>Aucune donnée supplémentaire à saisir ici</h3><p>Le module <strong>{{ task.title }}</strong> s’appuie sur les champs d’admission et d’historique déjà collectés. Nous ne vous demandons pas de données qui ne sont pas utilisées par ce modèle.</p><div class="insight-tags"><span>{{ icon('check-circle',14) }} Collecte minimale</span><span>{{ icon('shield-check',14) }} Étape conservée dans le parcours</span></div></div></div>
+        {% endif %}
+        {% if step == 4 and fields|selectattr('type','equalto','medication')|list|length > 4 %}<div class="treatment-footnote">{{ icon('info',16) }} Aucun état n’est pré-sélectionné. Pour chaque médicament, choisissez « Non », un état documenté ou « Non documenté » selon le dossier source.</div>{% endif %}
+      </section>
+      <div class="wizard-actions"><a class="btn btn-ghost {% if step == 1 %}disabled-link{% endif %}" href="{% if step > 1 %}{{ url_for('task_step', task_id=task.id, step=step-1) }}{% else %}{{ url_for('tasks_page') }}{% endif %}">{{ icon('arrow-left',17) }} {{ 'Précédent' if step > 1 else 'Annuler' }}</a><div class="actions-right"><span class="autosave-note">{{ icon('shield-check',14) }} Étape validée côté serveur</span><button class="btn btn-primary" type="submit">Continuer {{ icon('arrow-right',17) }}</button></div></div>
+    </form>
+  {% elif step == 5 %}
+    <form method="post" class="wizard-form" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <section class="form-panel review-panel"><div class="form-panel-heading"><div><span class="form-kicker">CONTRÔLE DE QUALITÉ</span><h2>Un dernier coup d’œil</h2><p>Les valeurs ci-dessous seront transmises au modèle. Revenez en arrière si une donnée manque ou semble incohérente.</p></div><span class="panel-step-icon">{{ icon('shield-check',23) }}</span></div>
+        <div class="review-summary-top"><span class="review-summary-icon">{{ icon('check-circle',21) }}</span><div><strong>{{ total_fields }} champs modèle collectés</strong><p>Les entrées numériques et catégorielles seront contrôlées une dernière fois avant le calcul.</p></div><span class="review-ready">Prêt à vérifier</span></div>
+        {% for group in review %}<div class="review-group"><div class="review-group-head"><span class="review-step-index">{% if group.step == 0 %}R{% else %}{{ group.step }}{% endif %}</span><h3>{{ group.title }}</h3>{% if group.step > 0 and group.step <=4 %}<a href="{{ url_for('task_step', task_id=task.id, step=group.step) }}">Modifier {{ icon('arrow-right',14) }}</a>{% endif %}</div><div class="review-fields">{% for f in group.fields %}<div class="review-field"><span>{{ f.label }}</span><strong>{{ f.value }}</strong></div>{% endfor %}</div></div>{% endfor %}
+        <div class="notice notice-warn review-warning">{{ icon('circle-alert',18) }}<div><strong>Interprétation responsable</strong><p>{{ task.note }}</p></div></div>
+      </section>
+      <div class="wizard-actions"><a class="btn btn-ghost" href="{{ url_for('task_step', task_id=task.id, step=4) }}">{{ icon('arrow-left',17) }} Corriger les données</a><div class="actions-right"><span class="autosave-note">{{ icon('lock-keyhole',14) }} Sans données nominatives</span><button class="btn btn-primary btn-run" type="submit">{{ icon('sparkles',17) }} Lancer l’analyse</button></div></div>
+    </form>
+  {% else %}
+    <section class="result-panel animate-in"><div class="result-topline"><div class="result-success-icon">{{ icon('check-circle',23) }}</div><div><span class="form-kicker">ANALYSE TERMINÉE</span><h2>Résultat disponible</h2><p>Référence d’évaluation <strong>#{{ result.record_id }}</strong> · enregistrée dans l’historique</p></div><span class="result-time">{{ result.threshold_label or 'Profil exploratoire' }}</span></div>
+      <div class="result-main-card {% if result.kind == 'cluster' %}result-cluster{% endif %}">
+        {% if result.kind == 'cluster' %}
+          <div class="cluster-result-symbol">{{ icon('layers-3',29) }}</div><div class="result-label-block"><span class="result-overline">PROFIL DE GESTION</span><h3>{{ result.label }}</h3><p>Profil assigné par regroupement des variables documentées.</p></div><div class="cluster-metric"><strong>#{{ result.cluster + 1 }}</strong><span>profil</span></div>
+        {% else %}
+          <div class="score-orbit {% if result.kind == 'multiclass' %}score-orbit-multi{% elif result.positive %}score-alert{% else %}score-calm{% endif %}"><div><strong>{% if result.binary_value is defined %}{{ result.binary_value }}{% else %}{{ result.score_percent }}<small>%</small>{% endif %}</strong><span>{% if result.binary_value is defined %}classe{% else %}score{% endif %}</span></div></div>
+          <div class="result-label-block">
+            <span class="result-overline">{{ task.target|upper }}</span>
+            <h3>{{ result.label }}</h3>
+            {% if result.binary_value is defined %}
+              <div style="margin: 8px 0; display: inline-flex; align-items: center; gap: 8px;">
+                <span class="pill-soft {% if result.binary_value == 1 %}pill-warning{% endif %}" style="font-size: 13px; font-weight: 700; padding: 4px 10px;">
+                  Sortie binaire : {{ result.binary_value }} ({{ 'Réadmission' if result.binary_value == 1 else 'Pas de réadmission' }})
+                </span>
+                <span class="pill-soft" style="font-size: 13px;">Probabilité : {{ result.score_percent }}%</span>
+              </div>
+            {% else %}
+              <p>{{ result.score_label or 'Score du modèle' }} : {{ result.score_percent }} %</p>
+            {% endif %}
+            <div class="score-bar"><span style="width:{{ result.score_percent }}%"></span></div>
+          </div>
+          <div class="result-score-side">
+            <span>Modèle</span><strong>{{ task.model }}</strong>
+            <small>Seuil : {{ '%.2f'|format(result.threshold) if result.threshold is not none else 'Non applicable' }}</small>
+            {% if result.binary_value is defined %}
+              <span class="live-pill" style="margin-top: 6px;"><i></i> Binaire {{ result.binary_value }}</span>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+      {% if result.kind == 'multiclass' and result.subscores %}<div class="probability-panel"><div class="panel-title-row"><div><h3>Répartition des classes</h3><p>Scores relatifs fournis par le classifieur</p></div></div>{% for sc in result.subscores %}<div class="prob-row"><div class="prob-row-label"><span>{{ sc.label }}</span><strong>{{ sc.value }}%</strong></div><div class="prob-track"><span style="width:{{ sc.value }}%"></span></div></div>{% endfor %}</div>{% endif %}
+      {% if result.kind == 'cluster' %}<div class="probability-panel cluster-dist-panel"><div class="panel-title-row"><div><h3>Lecture du profil</h3><p>Les groupes se chevauchent; interprétation prudente.</p></div><span class="pill-soft">Proximité indicative {{ result.proximity_percent }}%</span></div><p class="cluster-distance-note">Distance au centroïde assigné : {{ result.distance }} (espace standardisé). Ce nombre n’est pas une probabilité.</p></div>{% endif %}
+      <div class="result-interpretation"><div class="interpretation-icon">{{ icon('info',18) }}</div><div><strong>Comment lire ce résultat</strong><p>{{ result.detail }}</p></div></div>
+      <div class="notice notice-warn result-disclaimer">{{ icon('circle-alert',18) }}<div><strong>Validation humaine obligatoire</strong><p>{{ task.note }}</p></div></div>
+      <div class="result-actions"><a href="{{ url_for('start_task', task_id=task.id) }}" class="btn btn-primary">Nouvelle évaluation {{ icon('plus',17) }}</a><a href="{{ url_for('assessment_detail', record_id=result.record_id) }}" class="btn btn-secondary">Voir le compte rendu {{ icon('file-text',17) }}</a><a href="{{ url_for('patients') }}" class="text-link">Historique {{ icon('arrow-right',16) }}</a></div>
+    </section>
+  {% endif %}
+  {% if step < 6 %}<div class="wizard-bottom-note">{{ icon('shield-check',15) }} <span>Les champs sont contrôlés dans le navigateur et côté serveur. Le résultat reste un signal exploratoire.</span></div>{% endif %}
+</div>
+{% endblock %}

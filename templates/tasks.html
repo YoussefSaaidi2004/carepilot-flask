@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% from '_icons.html' import icon %}
+{% block title %}Modules IA{% endblock %}
+{% block breadcrumb %}Modules IA{% endblock %}
+{% block content %}
+<div class="page-heading animate-in"><div><div class="eyebrow"><span class="eyebrow-dot"></span> BIBLIOTHÈQUE DES OUTILS</div><h1>Choisir un module</h1><p class="page-subtitle">Chaque parcours comporte 6 étapes, avec contrôle de saisie, révision puis résultat traçable.</p></div><div class="heading-meta"><span class="pill-soft">{{ tasks|length }} modules</span><span class="pill-soft pill-outline">6 étapes / module</span></div></div>
+<div class="tasks-intro-bar animate-in delay-1"><div class="intro-icon">{{ icon('sparkles',21) }}</div><div><strong>Des formulaires qui s’adaptent au contexte</strong><p>Les champs sont filtrés selon le modèle : sélections assistées, contrôles numériques, choix rapides pour les traitements et étape de vérification.</p></div></div>
+<div class="task-catalog-grid animate-in delay-2">
+{% for task in tasks %}
+<article class="catalog-card"><div class="catalog-head"><div class="module-icon icon-bg-{{ task.color }}">{{ icon(task.icon,22) }}</div><span class="catalog-type">{% if task.kind == 'cluster' %}NON SUPERVISÉ{% elif task.kind == 'multiclass' %}CLASSIFICATION{% else %}BINAIRE (0 / 1){% endif %}</span></div><div class="catalog-eyebrow">{{ task.group }} · <strong>{{ task.model }}</strong></div><h2>{{ task.title }}</h2><p>{{ task.description }}</p><div class="catalog-target"><small>CIBLE</small><strong>{{ task.target }}</strong></div><div class="catalog-footer"><span>{{ icon('cpu',15) }} Modèle : <strong>{{ task.model }}</strong></span><a href="{{ url_for('start_task', task_id=task.id) }}" class="btn btn-secondary btn-sm">Démarrer {{ icon('arrow-right',15) }}</a></div><div class="catalog-disclaimer">{{ icon('info',14) }} {{ task.note }}</div></article>
+{% endfor %}
+</div>
+<div class="notice notice-warn catalog-warning">{{ icon('circle-alert',18) }} <div><strong>À retenir avant utilisation</strong><p>Cette application est un prototype de recherche. Elle ne doit pas servir de système d’aide à la décision clinique réel sans validation externe, revue des données, validation de l’usage prévu et approbation institutionnelle.</p></div></div>
+{% endblock %}

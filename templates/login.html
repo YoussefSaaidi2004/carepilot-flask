@@ -1,0 +1,38 @@
+{% extends 'public_base.html' %}
+{% from '_icons.html' import icon %}
+{% block title %}Connexion{% endblock %}
+{% block content %}
+<div class="login-shell">
+  <div class="login-visual">
+    <div class="login-glow glow-one"></div><div class="login-glow glow-two"></div>
+    <div class="login-visual-content">
+      <div class="login-mini-brand"><span class="brand-mark"><span class="brand-cross"></span></span> carepilot</div>
+      <div class="eyebrow light-eyebrow"><span class="eyebrow-dot"></span> CLINICAL INTELLIGENCE WORKSPACE</div>
+      <h1>Une meilleure lecture du dossier.<br><em>Un parcours mieux préparé.</em></h1>
+      <p>Six modules exploratoires pour aider les équipes à structurer l’analyse, la continuité des soins et la planification hospitalière.</p>
+      <div class="login-trust-row"><span>{{ icon('shield-check',17) }} Accès authentifié</span><span>{{ icon('activity',17) }} Outils d’aide à l’analyse</span></div>
+      <div class="login-abstract-chart"><div class="chart-caption"><span>Signal de données</span><span>Illustration d’interface</span></div><div class="wave-chart"><i style="height:20%"></i><i style="height:32%"></i><i style="height:28%"></i><i style="height:55%"></i><i style="height:42%"></i><i style="height:68%"></i><i style="height:44%"></i><i style="height:78%"></i><i style="height:61%"></i><i style="height:91%"></i><i style="height:70%"></i><i style="height:84%"></i><i style="height:52%"></i><i style="height:74%"></i><i style="height:94%"></i><i style="height:64%"></i><i style="height:43%"></i><i style="height:70%"></i><i style="height:85%"></i><i style="height:59%"></i></div></div>
+    </div>
+    <div class="login-visual-footer"><span>Prototype de recherche · version locale</span><span>01 / 06</span></div>
+  </div>
+  <div class="login-panel">
+    <div class="login-top-note"><span class="status-dot"></span> ACCÈS AU PERSONNEL AUTORISÉ</div>
+    <div class="login-card">
+      <div class="login-symbol">{{ icon('lock-keyhole',25) }}</div>
+      <h2>Bon retour.</h2><p class="muted">Connectez-vous à votre espace de travail sécurisé.</p>
+      {% if user_count == 0 %}<div class="notice notice-warn">Aucun compte n’existe encore. Dans le terminal du projet, créez un compte avec <code>flask --app app create-admin</code>, puis rechargez cette page.</div>{% endif %}
+      <form method="post" class="login-form" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label for="username">Identifiant du compte</label>
+        <div class="input-icon-wrap">{{ icon('user-round',18) }}<input id="username" name="username" type="text" autocomplete="username" required minlength="3" maxlength="32" placeholder="ex. equipe.soins" value="{{ request.form.get('username','') }}"></div>
+        <label for="password">Mot de passe</label>
+        <div class="input-icon-wrap">{{ icon('key-round',18) }}<input id="password" name="password" type="password" autocomplete="current-password" required placeholder="Votre mot de passe"><button type="button" class="password-toggle" data-toggle-password="#password" aria-label="Afficher le mot de passe">Voir</button></div>
+        <button class="btn btn-primary btn-wide login-submit" type="submit">Ouvrir mon espace {{ icon('arrow-right',18) }}</button>
+      </form>
+      <div class="login-separator"><span></span><small>CONFIDENTIALITÉ PAR DÉFAUT</small><span></span></div>
+      <div class="login-footnote">{{ icon('shield-check',17) }} <p>N’utilisez pas de vrais identifiants de patient dans cette démonstration. Le déploiement clinique nécessite une revue de sécurité, d’accès et de conformité.</p></div>
+    </div>
+    <div class="login-bottom">© 2026 CarePilot <span>·</span> Conçu pour les équipes de soins</div>
+  </div>
+</div>
+{% endblock %}

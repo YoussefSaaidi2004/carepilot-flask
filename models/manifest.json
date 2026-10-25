@@ -1,0 +1,43 @@
+{
+  "long_stay": {
+    "artifact": "modeles_comparaison.joblib",
+    "model": "XGBoost non équilibré",
+    "threshold": 0.27,
+    "features": 42,
+    "target": "time_in_hospital >= 7 days",
+    "warning": "Several variables can become known during the stay; not validated for admission-time clinical use."
+  },
+  "readmission": {
+    "artifact": "readmission.joblib",
+    "model": "XGBoost Classifier (optimisé)",
+    "threshold": 0.5,
+    "accuracy": 63.78,
+    "roc_auc": 0.6867,
+    "target": "readmitted != NO",
+    "warning": "Modèle XGBoost entraîné pour maximiser la précision globale (Accuracy test: ~64%, ROC-AUC: ~0.69)."
+  },
+  "care_load": {
+    "artifact": "care_load.joblib",
+    "model": "Logistic regression trained against a KMeans proxy label",
+    "target": "High care-load cluster proxy",
+    "warning": "Predicts a cluster-derived class, not a validated clinical endpoint."
+  },
+  "care_profile": {
+    "artifact": "care_profiles.joblib",
+    "model": "KMeans k=3",
+    "target": "Care-management profile",
+    "warning": "Profiles describe recorded management patterns, not diabetes types or treatment recommendations."
+  },
+  "hba1c": {
+    "artifact": "hba1c_status.joblib",
+    "model": "Logistic regression, admission/history inputs",
+    "target": "None / Norm / Anormal",
+    "warning": "Weakly supervised signal; always verify actual lab tests and results."
+  },
+  "treatment_pattern": {
+    "artifact": "treatment_pattern.joblib",
+    "model": "Logistic regression",
+    "target": "Insulin or metformin observed in historical record",
+    "warning": "This is not a medication recommendation."
+  }
+}
