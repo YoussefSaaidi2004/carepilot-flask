@@ -5,6 +5,7 @@ import json, re
 import joblib
 import numpy as np
 import pandas as pd
+import xgboost as xgb
 from domain import ROOT, OPTIONS, MEDS, ORAL, TASKS
 
 MODEL_DIR = ROOT / 'models'
@@ -15,8 +16,14 @@ class ModelService:
         self.readmission = joblib.load(MODEL_DIR / 'readmission.joblib')
         self.care_load = joblib.load(MODEL_DIR / 'care_load.joblib')
         self.care_profiles = joblib.load(MODEL_DIR / 'care_profiles.joblib')
-        self.hba1c = joblib.load(MODEL_DIR / 'hba1c_status.joblib')
+        self._hba1c = None
         self.treatment = joblib.load(MODEL_DIR / 'treatment_pattern.joblib')
+
+    @property
+    def hba1c(self):
+        if self._hba1c is None:
+            self._hba1c = joblib.load(MODEL_DIR / 'hba1c_status.joblib')
+        return self._hba1c
 
     @staticmethod
     def _age_mid(value: str) -> float:
@@ -68,13 +75,24 @@ class ModelService:
             elif name in categorical_columns:
                 value = self._cat(payload, name)
                 allowed = OPTIONS.get('xgb_categories', {}).get(name, [])
-                if value not in allowed: value = 'Inconnu'
-                categories = allowed or [value]
-                row[name] = pd.Categorical([value], categories=categories)
-        X = pd.DataFrame({k: [v] if not isinstance(v, pd.Categorical) else v for k,v in row.items()})
-        X = X[feature_columns]
+                if value not in allowed:
+                    value = 'Inconnu' if 'Inconnu' in allowed else None
+                categories = allowed or ([value] if value is not None else [])
+                category_code = int(pd.Categorical([value], categories=categories).codes[0])
+                row[name] = np.nan if category_code < 0 else category_code
         model = self.xgb['xgboost_unbalanced']
-        score = float(model.predict_proba(X)[:,1][0])
+        booster = model.get_booster()
+        feature_types = booster.feature_types
+        if booster.feature_names != feature_columns or feature_types is None or len(feature_types) != len(feature_columns):
+            raise ValueError('Les variables du modèle de durée de séjour sont incohérentes.')
+        matrix = np.asarray([[row[name] for name in feature_columns]], dtype=np.float32)
+        data = xgb.DMatrix(
+            matrix,
+            feature_names=feature_columns,
+            feature_types=feature_types,
+            enable_categorical=True,
+        )
+        score = float(booster.predict(data)[0])
         threshold = float(self.xgb.get('threshold_reference', 0.27))
         positive = score >= threshold
         return {
