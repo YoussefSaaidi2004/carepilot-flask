@@ -7,15 +7,25 @@ echo ========================================================
 
 set "PYTHON="
 
-:: 1. Verifier si py launcher reconnait 3.12 ou 3.11
-py -3.12 --version >nul 2>&1 && set "PYTHON=py -3.12"
+:: 1. Verifier les versions Python prises en charge (de la plus recente a la plus ancienne)
+py -3.14 --version >nul 2>&1 && set "PYTHON=py -3.14"
+if not defined PYTHON (
+  py -3.13 --version >nul 2>&1 && set "PYTHON=py -3.13"
+)
+if not defined PYTHON (
+  py -3.12 --version >nul 2>&1 && set "PYTHON=py -3.12"
+)
 if not defined PYTHON (
   py -3.11 --version >nul 2>&1 && set "PYTHON=py -3.11"
 )
 
 :: 2. Verifier dans LocalAppData (installations standard utilisateur)
 if not defined PYTHON (
-  if exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" (
+  if exist "%LOCALAPPDATA%\Programs\Python\Python314\python.exe" (
+    set "PYTHON=%LOCALAPPDATA%\Programs\Python\Python314\python.exe"
+  ) else if exist "%LOCALAPPDATA%\Programs\Python\Python313\python.exe" (
+    set "PYTHON=%LOCALAPPDATA%\Programs\Python\Python313\python.exe"
+  ) else if exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" (
     set "PYTHON=%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
   ) else if exist "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" (
     set "PYTHON=%LOCALAPPDATA%\Programs\Python\Python311\python.exe"
@@ -24,12 +34,12 @@ if not defined PYTHON (
 
 :: 3. Verifier la commande python du PATH
 if not defined PYTHON (
-  python -c "import sys; exit(0 if sys.version_info[0]==3 and sys.version_info[1] in (11,12) else 1)" >nul 2>&1
+  python -c "import sys; exit(0 if sys.version_info[0]==3 and sys.version_info[1] in (11,12,13,14) else 1)" >nul 2>&1
   if not errorlevel 1 set "PYTHON=python"
 )
 
 if not defined PYTHON (
-  echo [ERREUR] Python 3.12 ou 3.11 (64-bit) est requis.
+  echo [ERREUR] Python 3.11, 3.12, 3.13 ou 3.14 (64-bit) est requis.
   echo Installez Python depuis https://www.python.org/downloads/
   goto :error
 )

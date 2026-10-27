@@ -17,7 +17,7 @@ Le modèle de surveillance HbA1c intègre une architecture séquentielle à deux
 
 ## Prérequis
 
-- Python 3.11–3.13 recommandé
+- Python 3.11–3.14 (validation locale effectuée avec Python 3.14)
 - Les dépendances de `requirements.txt`
 - Le dossier `models/` inclus avec ce projet
 
@@ -25,7 +25,7 @@ Le modèle de surveillance HbA1c intègre une architecture séquentielle à deux
 
 ```powershell
 cd carepilot_flask
-py -3.11 -m venv .venv
+py -3.14 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 pip install -r requirements.txt
