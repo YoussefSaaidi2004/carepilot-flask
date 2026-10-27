@@ -10,10 +10,10 @@ Interface web en français destinée à une **démonstration de recherche** auto
 2. **Réadmission** — classifieur XGBoost optimisé pour maximiser la précision globale (~64%, ROC-AUC ~0.69), cible `readmitted != NO` (la variable regroupe ` <30` et `>30`).
 3. **Charge de soins** — classe proxy apprise à partir d’un clustering K-Means sur la consommation historique de soins, puis classifiée à partir de variables de profil/admission. Ce n’est pas une vérité clinique indépendante.
 4. **Profils de soins** — K-Means à trois profils de gestion; ces profils ne sont ni des types de diabète ni des recommandations thérapeutiques. La séparation des clusters est faible.
-5. **Surveillance HbA1c** — classes `None`, `Norm`, `Anormal`, prédites par une régression logistique de démonstration sur le profil/admission et les visites antérieures. Il faut vérifier l’examen et son résultat dans le dossier biologique.
+5. **Surveillance HbA1c** — classes `None`, `Norm`, `Anormal`, prédites par une architecture séquentielle en deux étages (F1 macro 0,482, ROC-AUC 0,767, Accuracy 74,9%). L'étage 1 évalue la probabilité de réalisation du test et l'étage 2 évalue le risque d'anomalie glycémique conditionnel.
 6. **Profil thérapeutique** — classifie un motif historique associé à la présence d’insuline et/ou de metformine. **Ce module ne recommande pas de traitement.**
 
-Le notebook HbA1c fourni contient une expérimentation CatBoost plus riche. Le projet n’embarque pas cet artefact final; pour disposer d’un service exécutable avec les fichiers fournis, le modèle auxiliaire HbA1c est réentraîné par `train_models.py` comme classifieur logistique proxy. De même, les artefacts auxiliaires de réadmission, charge de soins et profil thérapeutique utilisent des modèles de référence réentraînés; leurs sorties ne sont pas nécessairement identiques aux meilleures expériences affichées dans les notebooks. Les profils K-Means sont reconstruits. Seul le modèle XGBoost de durée de séjour est chargé depuis l’artefact de l’expérience fournie. Les choix de cibles, hypothèses et limites sont décrits ici et dans `models/manifest.json`; réévaluez chaque modèle avant toute utilisation au-delà de la démonstration.
+Le modèle de surveillance HbA1c intègre une architecture séquentielle à deux étages avec décomposition du dépistage et du risque glycémique, explicabilité TreeSHAP et protocole de conduite à tenir ADA.
 
 ## Prérequis
 

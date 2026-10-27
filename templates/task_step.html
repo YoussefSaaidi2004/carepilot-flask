@@ -3,6 +3,144 @@
 {% block title %}{{ task.title }} · Étape {{ step }}{% endblock %}
 {% block breadcrumb %}<a href="{{ url_for('tasks_page') }}">Modules IA</a> {{ icon('chevron-right',14) }} {{ task.title }}{% endblock %}
 {% block content %}
+<style>
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 12mm;
+  }
+  
+  *, *::before, *::after {
+    box-sizing: border-box !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 10pt !important;
+    line-height: 1.35 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  .app-shell, .app-layout, .main-shell, .page-wrap {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    margin: 0 !important;
+    margin-left: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+    position: static !important;
+    transform: none !important;
+  }
+
+  /* Masquer complètement les barres d'outils, navigation, menus, boutons et éléments superflus */
+  aside,
+  header,
+  footer,
+  #sidebar,
+  .sidebar,
+  .topbar,
+  .mobile-menu,
+  .wizard-back-row,
+  .stepper-card,
+  .wizard-bottom-note,
+  .result-actions,
+  .page-footer,
+  .btn,
+  button,
+  .flash-stack,
+  .print-hide,
+  .result-disclaimer {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .wizard-page,
+  .result-panel {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .wizard-head {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-bottom: 2px solid #0f172a !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .wizard-title-zone h1 {
+    font-size: 16pt !important;
+    margin: 0 0 2px 0 !important;
+    color: #0f172a !important;
+  }
+
+  .wizard-title-zone p {
+    font-size: 9pt !important;
+    margin: 0 !important;
+    color: #475569 !important;
+  }
+
+  .wizard-model-badge {
+    border: 1px solid #cbd5e1 !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    background: #f8fafc !important;
+    font-size: 9pt !important;
+  }
+
+  .result-topline {
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding-bottom: 6px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .result-main-card,
+  .probability-panel,
+  .result-priority-card {
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    margin-bottom: 8px !important;
+    padding: 10px 14px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    border-radius: 8px !important;
+  }
+
+  .result-interpretation {
+    padding: 6px 0 !important;
+    margin-top: 6px !important;
+    font-size: 9pt !important;
+    break-inside: avoid !important;
+  }
+}
+</style>
 <div class="wizard-page animate-in">
   <div class="wizard-back-row"><a class="back-link" href="{{ url_for('tasks_page') }}">{{ icon('arrow-left',16) }} Tous les modules</a><span class="confidential-label">{{ icon('lock-keyhole',14) }} Évaluation locale</span></div>
   <div class="wizard-head"><div class="wizard-title-zone"><span class="module-icon icon-bg-{{ task.color }}">{{ icon(task.icon,24) }}</span><div><div class="eyebrow">{{ task.group|upper }}</div><h1>{{ task.title }}</h1><p>{{ task.description }}</p></div></div><div class="wizard-model-badge"><small>MODÈLE</small><strong>{{ task.model }}</strong><span class="model-state"><i></i> Chargé</span></div></div>
@@ -11,6 +149,43 @@
   </div></div>
 
   {% if errors %}<div class="validation-alert" role="alert">{{ icon('circle-alert',19) }}<div><strong>Quelques points à corriger</strong><ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div></div>{% endif %}
+
+  {% if task.id == 'hba1c' and step == 1 %}
+  <div class="demo-profiles-card" style="margin-bottom: 20px; background: linear-gradient(135deg, #fff7ed, #fffbf5); border: 1px solid #fed7aa; border-radius: 14px; padding: 16px 20px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: #ea580c; color: #fff; font-size: 16px;">
+          💡
+        </span>
+        <div>
+          <strong style="color: #9a3412; font-size: 13px; display: block;">Profils Cliniques Types (Démonstration en 1 Clic)</strong>
+          <span style="color: #c2410c; font-size: 11px;">Pré-remplissez instantanément un cas patient réel pour évaluer le protocole de dépistage et de suivi.</span>
+        </div>
+      </div>
+      <span class="pill-soft" style="background: #ffedd5; color: #9a3412; border: 1px solid #fdba74; font-size: 10px; font-weight: 700;">3 Cas Types</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px;">
+      <a href="{{ url_for('load_hba1c_demo', demo_id='cas-1') }}" class="btn btn-secondary btn-sm" style="background: #fff; border: 1px solid #f97316; color: #c2410c; justify-content: flex-start; text-align: left; padding: 10px 14px; height: auto;">
+        <div>
+          <div style="font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 6px;">🔴 Cas 1 · Risque Anormal Élevé</div>
+          <small style="color: #78716c; font-size: 10px; font-weight: 500; display: block; margin-top: 2px;">Patient âgé, polymédiqué, décompensation glycémique.</small>
+        </div>
+      </a>
+      <a href="{{ url_for('load_hba1c_demo', demo_id='cas-2') }}" class="btn btn-secondary btn-sm" style="background: #fff; border: 1px solid #eab308; color: #854d0e; justify-content: flex-start; text-align: left; padding: 10px 14px; height: auto;">
+        <div>
+          <div style="font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 6px;">🟠 Cas 2 · Omission Dépistage (ADA)</div>
+          <small style="color: #78716c; font-size: 10px; font-weight: 500; display: block; margin-top: 2px;">Admission cardiaque, absence de test HbA1c au dossier.</small>
+        </div>
+      </a>
+      <a href="{{ url_for('load_hba1c_demo', demo_id='cas-3') }}" class="btn btn-secondary btn-sm" style="background: #fff; border: 1px solid #10b981; color: #065f46; justify-content: flex-start; text-align: left; padding: 10px 14px; height: auto;">
+        <div>
+          <div style="font-weight: 800; font-size: 12px; display: flex; align-items: center; gap: 6px;">🟢 Cas 3 · Surveillance Standard</div>
+          <small style="color: #78716c; font-size: 10px; font-weight: 500; display: block; margin-top: 2px;">Patient sous antidiabétique oral stable, glycémie normale.</small>
+        </div>
+      </a>
+    </div>
+  </div>
+  {% endif %}
 
   {% if step <= 4 %}
     <form method="post" class="wizard-form" novalidate data-validate-form>
@@ -98,7 +273,250 @@
           </div>
         {% endif %}
       </div>
-      {% if result.kind == 'multiclass' and result.subscores %}<div class="probability-panel"><div class="panel-title-row"><div><h3>Répartition des classes</h3><p>Scores relatifs fournis par le classifieur</p></div></div>{% for sc in result.subscores %}<div class="prob-row"><div class="prob-row-label"><span>{{ sc.label }}</span><strong>{{ sc.value }}%</strong></div><div class="prob-track"><span style="width:{{ sc.value }}%"></span></div></div>{% endfor %}</div>{% endif %}
+      {% if task.id == 'hba1c' %}
+        {# --- 1. Architecture séquentielle à deux étages --- #}
+        {% if result.stage1_tested_percent is defined and result.stage2_anormal_percent is defined %}
+        <div class="probability-panel" style="margin-top: 14px; background: rgba(225, 29, 72, 0.04); border: 1px solid rgba(225, 29, 72, 0.18); border-radius: 12px; padding: 16px;">
+          <div class="panel-title-row">
+            <div>
+              <h3 style="color: #be123c;">Architecture Séquentielle à 2 Étages</h3>
+              <p>Décomposition séquentielle du dépistage et du risque glycémique</p>
+            </div>
+            <span class="pill-soft" style="font-weight: 700;">F1: 0.482 · ROC-AUC: 0.767</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px;">
+            <div style="background: var(--card-bg, #fff); padding: 12px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.06);">
+              <small style="color: #64748b; font-weight: 600; text-transform: uppercase;">Étage 1 · Prescription examen</small>
+              <div style="font-size: 18px; font-weight: 800; margin: 4px 0;">{{ result.stage1_tested_percent }}% <span style="font-size: 13px; font-weight: 500; color: #64748b;">probabilité de réalisation</span></div>
+              <p style="font-size: 12px; margin: 0; color: #475569;">Probabilité que le test HbA1c soit consigné durant le séjour.</p>
+            </div>
+            <div style="background: var(--card-bg, #fff); padding: 12px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.06);">
+              <small style="color: #64748b; font-weight: 600; text-transform: uppercase;">Étage 2 · Risque si testé</small>
+              <div style="font-size: 18px; font-weight: 800; margin: 4px 0; color: {% if result.stage2_anormal_percent >= 50 %}#e11d48{% else %}#16a34a{% endif %};">{{ result.stage2_anormal_percent }}% <span style="font-size: 13px; font-weight: 500; color: #64748b;">résultat anormal (&gt; 7%)</span></div>
+              <p style="font-size: 12px; margin: 0; color: #475569;">Probabilité d'HbA1c &gt; 7% conditionnelle à la réalisation du test.</p>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {# --- 2. Explicabilité Locale TreeSHAP (XAI) --- #}
+        {% if result.factors %}
+        <div class="probability-panel" style="margin-top: 14px; background: #fff; border: 1px solid rgba(0,0,0,0.09); border-radius: 12px; padding: 18px;">
+          <div class="panel-title-row">
+            <div>
+              <h3 style="display: flex; align-items: center; gap: 8px; color: #0f172a;">
+                {{ icon('sparkles', 18) }} Explicabilité IA (TreeSHAP) — Facteurs Clés du Patient
+              </h3>
+              <p>Variables du dossier ayant le plus influencé la décision du modèle pour ce profil</p>
+            </div>
+            <span class="pill-soft" style="font-size: 12px;">Interprétabilité locale</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px;">
+            {% for factor in result.factors %}
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                <span style="font-weight: 600; color: #1e293b;">
+                  {% if factor.type == 'risk' %}🔴{% else %}🟢{% endif %} {{ factor.label }}
+                </span>
+                <strong style="color: {% if factor.type == 'risk' %}#be123c{% else %}#15803d{% endif %};">
+                  {{ factor.impact }}
+                </strong>
+              </div>
+              <div style="background: rgba(0,0,0,0.06); height: 7px; border-radius: 4px; overflow: hidden;">
+                <div style="height: 100%; width: {{ factor.weight }}%; background: {% if factor.type == 'risk' %}#f43f5e{% else %}#22c55e{% endif %}; border-radius: 4px;"></div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        {# --- 3. Fiche de Conduite à Tenir Clinique (CDSS) --- #}
+        {% if result.priority %}
+        <div class="result-priority-card" style="margin-top: 14px; border-radius: 12px; border: 1px solid {{ result.priority.border }}; background: {{ result.priority.bg }}; padding: 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: {{ result.priority.color }};"></span>
+              <strong style="color: {{ result.priority.color }}; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">{{ result.priority.badge }}</strong>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button type="button" onclick="openPrescriptionModal()" class="btn btn-primary btn-sm" style="padding: 5px 13px; font-size: 12px; background: #0284c7; border: 1px solid #0284c7; color: #fff; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.08);">
+                {{ icon('file-text', 14) }} 📄 Générer l'Ordonnance Type
+              </button>
+              <button type="button" onclick="printSynthesis()" class="btn btn-secondary btn-sm" style="padding: 5px 12px; font-size: 12px; background: #fff;">
+                {{ icon('printer', 14) }} Imprimer synthèse
+              </button>
+            </div>
+          </div>
+          <div style="background: rgba(255,255,255,0.92); border-radius: 8px; padding: 12px; border: 1px solid rgba(0,0,0,0.06);">
+            <strong style="font-size: 13px; color: #334155; display: block; margin-bottom: 6px;">Protocole d'actions recommandées :</strong>
+            <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #1e293b; line-height: 1.6;">
+              {% for action in result.actions %}
+              <li>{{ action }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        {% endif %}
+
+        {# --- 4. Fiche de Pharmacovigilance & Sécurité Iatrogène --- #}
+        {% if result.pharmaco_alerts %}
+        <div class="probability-panel" style="margin-top: 14px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
+          <div class="panel-title-row" style="margin-bottom: 12px;">
+            <div>
+              <h3 style="display: flex; align-items: center; gap: 8px; color: #0f172a; margin: 0;">
+                {{ icon('shield-check', 18) }} Sécurité Thérapeutique & Pharmacovigilance
+              </h3>
+              <p style="margin: 4px 0 0; font-size: 11px; color: #64748b;">Analyse iatrogène automatisée : interactions, fonction rénale et risques d'hypoglycémie</p>
+            </div>
+            <span class="pill-soft" style="font-size: 11px;">Revue d'ordonnance</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            {% for alert in result.pharmaco_alerts %}
+            <div style="background: {{ alert.bg }}; border: 1px solid {{ alert.border }}; border-radius: 9px; padding: 12px 14px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; flex-wrap: wrap; gap: 6px;">
+                <strong style="color: {{ alert.color }}; font-size: 13px;">{{ alert.title }}</strong>
+                <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; background: #fff; padding: 2px 8px; border-radius: 6px; color: {{ alert.color }}; border: 1px solid {{ alert.border }};">
+                  {{ alert.badge }}
+                </span>
+              </div>
+              <p style="margin: 0; font-size: 12px; color: #334155; line-height: 1.55;">{{ alert.desc }}</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        {# --- 5. Simulateur Thérapeutique Interactif (What-If Analysis) --- #}
+        <div class="probability-panel" style="margin-top: 14px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px;">
+          <div class="panel-title-row" style="margin-bottom: 14px;">
+            <div>
+              <span class="form-kicker" style="color: #0284c7; font-size: 11px; font-weight: 700; letter-spacing: 0.6px; display: block; margin-bottom: 2px;">WHAT-IF ANALYSIS · AIDE À LA DÉCISION EN TEMPS RÉEL</span>
+              <h3 style="display: flex; align-items: center; gap: 8px; color: #0f172a; margin: 0; font-size: 16px;">
+                {{ icon('sparkles', 18) }} Simulateur Thérapeutique Interactif
+              </h3>
+              <p style="margin: 4px 0 0; font-size: 12px; color: #64748b;">
+                Simulez l'impact d'un réajustement thérapeutique sur la probabilité estimée de déséquilibre glycémique
+              </p>
+            </div>
+            <span class="pill-soft" style="font-size: 11px; background: #f0f9ff; color: #0369a1; border-color: #bae6fd;">Recalcul dynamique</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 16px;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 9px; padding: 12px;">
+              <label style="font-size: 11.5px; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">💉 Schéma Insulinique :</label>
+              <select id="whatif_insulin" onchange="runWhatIfSimulation()" style="width: 100%; font-size: 12.5px; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #1e293b;">
+                <option value="0">Schéma actuel inchangé</option>
+                <option value="-26">Titration & optimisation progressive (-26%)</option>
+                <option value="-38">Protocole Basal-Bolus intensifié (-38%)</option>
+                <option value="20">Désescalade / Omission (+20%)</option>
+              </select>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 9px; padding: 12px;">
+              <label style="font-size: 11.5px; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">💊 Antidiabétiques & Rein :</label>
+              <select id="whatif_oral" onchange="runWhatIfSimulation()" style="width: 100%; font-size: 12.5px; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #1e293b;">
+                <option value="0">Traitement oral standard</option>
+                <option value="-14">Ajustement posologique selon DFG (-14%)</option>
+                <option value="-22">Bithérapie optimisée avec iDPP-4 (-22%)</option>
+              </select>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 9px; padding: 12px;">
+              <label style="font-size: 11.5px; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">🎯 Surveillance & Éducation :</label>
+              <select id="whatif_surveillance" onchange="runWhatIfSimulation()" style="width: 100%; font-size: 12.5px; padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; color: #1e293b;">
+                <option value="0">Surveillance de routine du service</option>
+                <option value="-16">Profil 6 points + Dextro 3h00 + ETP (-16%)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="background: #f1f5f9; border-radius: 10px; padding: 14px 16px; border: 1px solid #e2e8f0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+              <div style="display: flex; align-items: baseline; gap: 8px;">
+                <span style="font-size: 12px; color: #64748b; font-weight: 600;">Risque initial : <strong style="color: #334155;">{{ result.stage2_anormal_percent or result.score_percent }}%</strong></span>
+                <span style="font-size: 13px; color: #0284c7;">➔</span>
+                <span style="font-size: 13px; font-weight: 700; color: #0f172a;">Risque simulé :</span>
+                <span id="whatif_score_display" style="font-size: 18px; font-weight: 800; color: #be123c;">
+                  {{ result.stage2_anormal_percent or result.score_percent }}%
+                </span>
+              </div>
+              <div id="whatif_delta_badge" style="font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 6px; background: #e2e8f0; color: #475569;">
+                Aucune modification
+              </div>
+            </div>
+
+            <div style="background: #e2e8f0; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 10px;">
+              <div id="whatif_bar" style="height: 100%; width: {{ result.stage2_anormal_percent or result.score_percent }}%; background: #be123c; border-radius: 5px; transition: width 0.4s ease, background 0.4s ease;"></div>
+            </div>
+
+            <div id="whatif_verdict" style="font-size: 12.5px; color: #334155; line-height: 1.5; background: #fff; padding: 10px 12px; border-radius: 7px; border: 1px solid #cbd5e1;">
+              💡 <em>Modifiez les paramètres thérapeutiques ci-dessus pour observer l'évolution dynamique de la trajectoire de risque.</em>
+            </div>
+          </div>
+        </div>
+
+        {# --- 6. Checklist de Sortie Sécurisée (Accréditation HAS / Qualité) --- #}
+        <div class="probability-panel" style="margin-top: 14px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px;">
+          <div class="panel-title-row" style="margin-bottom: 12px;">
+            <div>
+              <span class="form-kicker" style="color: #15803d; font-size: 11px; font-weight: 700; letter-spacing: 0.6px; display: block; margin-bottom: 2px;">ACCRÉDITATION HAS · CONTRÔLE QUALITÉ DES SOINS</span>
+              <h3 style="display: flex; align-items: center; gap: 8px; color: #0f172a; margin: 0; font-size: 16px;">
+                {{ icon('shield-check', 18) }} Checklist de Sortie Sécurisée (Safe Discharge)
+              </h3>
+              <p style="margin: 4px 0 0; font-size: 12px; color: #64748b;">
+                Validez les critères de sécurité avant d'autoriser la levée de l'hospitalisation
+              </p>
+            </div>
+            <span id="checklist_status_badge" class="pill-soft" style="font-size: 11px; background: #fff1f2; color: #be123c; border-color: #fecdd3;">
+              0 / 5 critères validés (0%)
+            </span>
+          </div>
+
+          <div style="background: #f1f5f9; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 14px;">
+            <div id="checklist_progress_bar" style="height: 100%; width: 0%; background: #be123c; border-radius: 4px; transition: width 0.3s ease, background 0.3s ease;"></div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 9px; margin-bottom: 16px;">
+            <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #1e293b; cursor: pointer; padding: 8px 10px; background: #f8fafc; border-radius: 7px; border: 1px solid #e2e8f0;">
+              <input type="checkbox" class="discharge-chk" onchange="updateDischargeChecklist()" style="margin-top: 2px; width: 16px; height: 16px; accent-color: #16a34a;">
+              <span><strong>Dosage d'HbA1c veineuse :</strong> Réalisé durant le séjour ou vérifié documenté datant de moins de 90 jours dans le dossier.</span>
+            </label>
+
+            <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #1e293b; cursor: pointer; padding: 8px 10px; background: #f8fafc; border-radius: 7px; border: 1px solid #e2e8f0;">
+              <input type="checkbox" class="discharge-chk" onchange="updateDischargeChecklist()" style="margin-top: 2px; width: 16px; height: 16px; accent-color: #16a34a;">
+              <span><strong>Sécurité Rénale :</strong> Créatininémie et débit de filtration glomérulaire (DFG) vérifiés compatibles avec l'antidiabétique prescrit.</span>
+            </label>
+
+            <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #1e293b; cursor: pointer; padding: 8px 10px; background: #f8fafc; border-radius: 7px; border: 1px solid #e2e8f0;">
+              <input type="checkbox" class="discharge-chk" onchange="updateDischargeChecklist()" style="margin-top: 2px; width: 16px; height: 16px; accent-color: #16a34a;">
+              <span><strong>Prévention des Hypoglycémies :</strong> Éducation du patient aux signes précurseurs et remise du protocole de resucrage (15g glucides).</span>
+            </label>
+
+            <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #1e293b; cursor: pointer; padding: 8px 10px; background: #f8fafc; border-radius: 7px; border: 1px solid #e2e8f0;">
+              <input type="checkbox" class="discharge-chk" onchange="updateDischargeChecklist()" style="margin-top: 2px; width: 16px; height: 16px; accent-color: #16a34a;">
+              <span><strong>Conciliation Médicamenteuse :</strong> Revue de l'ordonnance validée par la pharmacie clinique (absence d'interaction majeure).</span>
+            </label>
+
+            <label style="display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #1e293b; cursor: pointer; padding: 8px 10px; background: #f8fafc; border-radius: 7px; border: 1px solid #e2e8f0;">
+              <input type="checkbox" class="discharge-chk" onchange="updateDischargeChecklist()" style="margin-top: 2px; width: 16px; height: 16px; accent-color: #16a34a;">
+              <span><strong>Suivi Ambulatoire :</strong> Rendez-vous de consultation en diabétologie programmé à 3 mois et courrier de liaison transmis.</span>
+            </label>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <button id="btn_sign_discharge" type="button" onclick="signDischarge()" class="btn btn-secondary btn-sm" disabled style="padding: 7px 16px; font-size: 12.5px; opacity: 0.5;">
+              {{ icon('check-circle', 15) }} Valider et Horodater l'Autorisation de Sortie
+            </button>
+            <div id="discharge_sign_msg" style="display: none; font-size: 12.5px; font-weight: 600; color: #15803d; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 6px 12px; border-radius: 6px;">
+              {{ icon('shield-check', 15) }} Sortie autorisée et consignée dans le dossier patient.
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+
+      {% if result.kind == 'multiclass' and result.subscores %}<div class="probability-panel {% if task.id == 'hba1c' %}print-hide{% endif %}"><div class="panel-title-row"><div><h3>Répartition des classes</h3><p>Scores relatifs fournis par le classifieur</p></div></div>{% for sc in result.subscores %}<div class="prob-row"><div class="prob-row-label"><span>{{ sc.label }}</span><strong>{{ sc.value }}%</strong></div><div class="prob-track"><span style="width:{{ sc.value }}%"></span></div></div>{% endfor %}</div>{% endif %}
       {% if result.kind == 'cluster' %}<div class="probability-panel cluster-dist-panel"><div class="panel-title-row"><div><h3>Lecture du profil</h3><p>Les groupes se chevauchent; interprétation prudente.</p></div><span class="pill-soft">Proximité indicative {{ result.proximity_percent }}%</span></div><p class="cluster-distance-note">Distance au centroïde assigné : {{ result.distance }} (espace standardisé). Ce nombre n’est pas une probabilité.</p></div>{% endif %}
       <div class="result-interpretation"><div class="interpretation-icon">{{ icon('info',18) }}</div><div><strong>Comment lire ce résultat</strong><p>{{ result.detail }}</p></div></div>
       <div class="notice notice-warn result-disclaimer">{{ icon('circle-alert',18) }}<div><strong>Validation humaine obligatoire</strong><p>{{ task.note }}</p></div></div>
@@ -107,4 +525,256 @@
   {% endif %}
   {% if step < 6 %}<div class="wizard-bottom-note">{{ icon('shield-check',15) }} <span>Les champs sont contrôlés dans le navigateur et côté serveur. Le résultat reste un signal exploratoire.</span></div>{% endif %}
 </div>
+
+{% if step == 6 and task.id == 'hba1c' %}
+{# --- Modal Ordonnance Hospitalière & Bilan Biologique Type (Isolée du flux de page) --- #}
+<div id="prescriptionModal" class="prescription-backdrop" onclick="if(event.target===this)closePrescriptionModal()">
+  <div class="prescription-card" id="prescriptionSheet">
+    <!-- Pinned Modal Header -->
+    <div class="prescription-header print-hide" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding: 18px 24px; background: #fff; flex-shrink: 0;">
+      <div>
+        <strong style="font-size: 16px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; display: block;">
+          CENTRE HOSPITALIER UNIVERSITAIRE · RÉSEAU CAREPILOT
+        </strong>
+        <span style="font-size: 12px; color: #64748b;">
+          Pôle de Médecine Métabolique & Interne · Service de Diabétologie-Endocrinologie
+        </span>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button type="button" onclick="printPrescription()" class="btn btn-primary btn-sm" style="background: #0284c7; border-color: #0284c7; font-size: 12px; padding: 6px 14px; font-weight: 700;">
+          {{ icon('printer', 14) }} Imprimer / Exporter PDF
+        </button>
+        <button type="button" onclick="closePrescriptionModal()" class="btn btn-ghost btn-sm" style="font-size: 13px; padding: 6px 12px; background: #f1f5f9; color: #334155; font-weight: 700;">
+          ✕ Fermer
+        </button>
+      </div>
+    </div>
+
+    <!-- Print-only Title Header -->
+    <div class="prescription-print-header" style="display: none; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px;">
+      <strong style="font-size: 17px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; display: block;">
+        CENTRE HOSPITALIER UNIVERSITAIRE · RÉSEAU CAREPILOT
+      </strong>
+      <span style="font-size: 12px; color: #64748b;">
+        Pôle de Médecine Métabolique & Interne · Service de Diabétologie-Endocrinologie
+      </span>
+    </div>
+
+    <!-- Scrollable Content Body -->
+    <div class="prescription-body" style="padding: 20px 24px 26px; overflow-y: auto; flex: 1;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; font-size: 13px; background: #f8fafc; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div>
+          <p style="margin: 0 0 4px;"><strong>Patient(e) :</strong> <span id="presc_patient_ref">{{ result.patient_context.patient_ref if result.patient_context else 'DOS-0427' }}</span></p>
+          <p style="margin: 0;"><strong>Profil d'âge :</strong> {{ (result.patient_context.age|replace('[','')|replace(')','')|replace('-',' à ') ~ ' ans') if result.patient_context else '60 à 70 ans' }}</p>
+        </div>
+        <div style="text-align: right;">
+          <p style="margin: 0 0 4px;"><strong>Date de prescription :</strong> <span id="presc_date"></span></p>
+          <p style="margin: 0;"><strong>Prescripteur :</strong> Dr Interne de Garde (RPPS: 100098421)</p>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <h4 style="font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.6px; color: #0284c7; margin: 0 0 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
+          I. Bilan Biologique à Réaliser (Laboratoire d'Analyses)
+        </h4>
+        <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #1e293b; line-height: 1.7;">
+          <li><strong>Dosage d'Hémoglobine Glyquée (HbA1c veineuse)</strong> par chromatographie liquide haute performance (HPLC certifiée NGSP/IFCC) à jeun.</li>
+          <li><strong>Bilan rénal complet :</strong> Créatininémie sérique avec estimation du Débit de Filtration Glomérulaire (DFG par formule CKD-EPI), Ionogramme sanguin (Na+, K+, Cl-).</li>
+          <li><strong>Bilan d'équilibre lipidique (EAL) :</strong> Cholestérol total, HDL, LDL calculé, Triglycérides à jeun.</li>
+        </ul>
+      </div>
+
+      <div style="margin-bottom: 22px;">
+        <h4 style="font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.6px; color: #be123c; margin: 0 0 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
+          II. Prescription Thérapeutique & Sécurité Pharmacologique
+        </h4>
+        <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #1e293b; line-height: 1.7;">
+          <li>
+            <strong>GLUCAGEN NOVO HYPOKIT 1 mg (Poudre et solvant pour injection) :</strong> 1 boîte.<br>
+            <em style="color: #64748b; font-size: 12px;">Usage : Kit d'urgence en cas d'hypoglycémie sévère avec altération de la conscience. À conserver au réfrigérateur. Éducation de l'entourage.</em>
+          </li>
+          <li>
+            <strong>Dispositif d'Autosurveillance Glycémique :</strong> Lecteur de glycémie capillaire + 100 bandelettes + 100 lancettes stériles.<br>
+            <em style="color: #64748b; font-size: 12px;">Posologie : Dextro 4 fois par jour (avant repas et au coucher) + contrôle systématique nocturne à 3h00 en phase de titration.</em>
+          </li>
+          <li>
+            <strong>Protocole de Resucrage Oral d'Urgence :</strong> En cas de dextro < 0.70 g/L : prise immédiate de 3 morceaux de sucre (15g glucides rapides), contrôle à 15 minutes.
+          </li>
+          <li>
+            <strong>Recommandation Fonction Rénale & Metformine :</strong> Maintien sous surveillance du DFG. Interruption obligatoire 48h avant tout examen radiologique avec injection de produit de contraste iodé.
+          </li>
+        </ul>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px; border-top: 1px solid #e2e8f0; padding-top: 14px; font-size: 12.5px;">
+        <div>
+          <strong style="color: #334155; display: block; margin-bottom: 4px;">Consignes de suivi :</strong>
+          <p style="margin: 0; color: #64748b; line-height: 1.5;">
+            Consultation d'Éducation Thérapeutique (ETP) planifiée.<br>
+            Contrôle d'HbA1c de suivi programmé à M+3 en consultation externe.
+          </p>
+        </div>
+        <div style="border: 1px dashed #cbd5e1; border-radius: 6px; padding: 10px; text-align: center; background: #fafafa;">
+          <span style="font-size: 11px; color: #64748b; display: block; margin-bottom: 8px;">Cachet & Signature Électronique</span>
+          <strong style="color: #0f172a; font-size: 12px; display: block;">Dr Interne de Garde</strong>
+          <span style="color: #16a34a; font-size: 10.5px; font-weight: 600;">✓ Document Validé CarePilot</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if step == 6 and task.id == 'hba1c' %}
+<script>
+// --- What-If Simulator Logic ---
+const BASE_ANORMAL_RISK = {{ result.stage2_anormal_percent or result.score_percent or 75 }};
+
+function runWhatIfSimulation() {
+  const ins = parseInt(document.getElementById('whatif_insulin')?.value || '0', 10);
+  const oral = parseInt(document.getElementById('whatif_oral')?.value || '0', 10);
+  const surv = parseInt(document.getElementById('whatif_surveillance')?.value || '0', 10);
+
+  const delta = ins + oral + surv;
+  let simulated = Math.round(BASE_ANORMAL_RISK + delta);
+  if (simulated < 8) simulated = 8;
+  if (simulated > 98) simulated = 98;
+
+  const scoreDisp = document.getElementById('whatif_score_display');
+  const deltaBadge = document.getElementById('whatif_delta_badge');
+  const bar = document.getElementById('whatif_bar');
+  const verdict = document.getElementById('whatif_verdict');
+
+  if (!scoreDisp || !bar) return;
+
+  scoreDisp.innerText = simulated + '%';
+  bar.style.width = simulated + '%';
+
+  if (delta < 0) {
+    deltaBadge.innerText = delta + '% de risque';
+    deltaBadge.style.background = '#dcfce7';
+    deltaBadge.style.color = '#15803d';
+  } else if (delta > 0) {
+    deltaBadge.innerText = '+' + delta + '% de risque';
+    deltaBadge.style.background = '#fee2e2';
+    deltaBadge.style.color = '#be123c';
+  } else {
+    deltaBadge.innerText = 'Aucune modification';
+    deltaBadge.style.background = '#e2e8f0';
+    deltaBadge.style.color = '#475569';
+  }
+
+  if (simulated <= 38) {
+    bar.style.background = '#16a34a';
+    scoreDisp.style.color = '#15803d';
+    verdict.innerHTML = '🎉 <strong>Trajectoire Optimale :</strong> L\'optimisation du schéma thérapeutique ramène le risque sous le seuil critique (<em>< 40%</em>). Le profil glycémique prévisionnel est stabilisé.';
+    verdict.style.borderColor = '#86efac';
+    verdict.style.background = '#f0fdf4';
+  } else if (simulated <= 58) {
+    bar.style.background = '#d97706';
+    scoreDisp.style.color = '#b45309';
+    verdict.innerHTML = '⚖️ <strong>Amélioration Intermédiaire :</strong> Réduction notable du risque. Un contrôle glycémique rapproché à 72h demeure indispensable.';
+    verdict.style.borderColor = '#fde68a';
+    verdict.style.background = '#fffbeb';
+  } else {
+    bar.style.background = '#be123c';
+    scoreDisp.style.color = '#be123c';
+    verdict.innerHTML = '🚨 <strong>Risque Élevé Persistant :</strong> Risque supérieur à 60%. Les mesures actuelles sont insuffisantes : avis spécialisé en endocrinologie requis.';
+    verdict.style.borderColor = '#fecdd3';
+    verdict.style.background = '#fff1f2';
+  }
+}
+
+// --- Discharge Checklist Logic ---
+function updateDischargeChecklist() {
+  const chks = document.querySelectorAll('.discharge-chk');
+  let checked = 0;
+  chks.forEach(c => { if (c.checked) checked++; });
+  const total = chks.length || 5;
+  const pct = Math.round((checked / total) * 100);
+
+  const bar = document.getElementById('checklist_progress_bar');
+  const badge = document.getElementById('checklist_status_badge');
+  const signBtn = document.getElementById('btn_sign_discharge');
+
+  if (bar) bar.style.width = pct + '%';
+  if (badge) {
+    badge.innerText = checked + ' / ' + total + ' critères validés (' + pct + '%)';
+    if (pct === 100) {
+      badge.style.background = '#dcfce7';
+      badge.style.color = '#15803d';
+      badge.style.borderColor = '#86efac';
+      badge.innerText = '✓ 100% Validé · Conforme';
+      if (bar) bar.style.background = '#16a34a';
+      if (signBtn) { signBtn.disabled = false; signBtn.style.opacity = '1'; signBtn.classList.remove('btn-secondary'); signBtn.classList.add('btn-primary'); }
+    } else if (pct >= 60) {
+      badge.style.background = '#fef3c7';
+      badge.style.color = '#b45309';
+      badge.style.borderColor = '#fde68a';
+      if (bar) bar.style.background = '#d97706';
+      if (signBtn) { signBtn.disabled = true; signBtn.style.opacity = '0.5'; }
+    } else {
+      badge.style.background = '#fff1f2';
+      badge.style.color = '#be123c';
+      badge.style.borderColor = '#fecdd3';
+      if (bar) bar.style.background = '#be123c';
+      if (signBtn) { signBtn.disabled = true; signBtn.style.opacity = '0.5'; }
+    }
+  }
+}
+
+function signDischarge() {
+  const signBtn = document.getElementById('btn_sign_discharge');
+  const msg = document.getElementById('discharge_sign_msg');
+  if (signBtn) signBtn.style.display = 'none';
+  if (msg) {
+    const now = new Date();
+    const formatted = now.toLocaleDateString('fr-FR') + ' à ' + now.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+    msg.innerHTML = '🛡️ Sortie médicale autorisée et horodatée le <strong>' + formatted + '</strong> par le Dr Interne de Garde.';
+    msg.style.display = 'block';
+  }
+  document.querySelectorAll('.discharge-chk').forEach(c => c.disabled = true);
+}
+
+// --- Prescription Modal Logic ---
+function openPrescriptionModal() {
+  const m = document.getElementById('prescriptionModal');
+  const d = document.getElementById('presc_date');
+  if (d) d.innerText = new Date().toLocaleDateString('fr-FR');
+  if (m) {
+    if (m.parentElement !== document.body) {
+      document.body.appendChild(m);
+    }
+    m.classList.add('open');
+    document.body.classList.add('modal-open');
+  }
+}
+
+function closePrescriptionModal() {
+  const m = document.getElementById('prescriptionModal');
+  if (m) m.classList.remove('open');
+  document.body.classList.remove('modal-open');
+}
+
+window.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closePrescriptionModal();
+});
+
+function printPrescription() {
+  document.body.classList.add('print-prescription-mode');
+  window.print();
+  setTimeout(() => {
+    document.body.classList.remove('print-prescription-mode');
+  }, 1000);
+}
+
+function printSynthesis() {
+  document.body.classList.add('print-synthesis-mode');
+  window.print();
+  setTimeout(() => {
+    document.body.classList.remove('print-synthesis-mode');
+  }, 1000);
+}
+</script>
+{% endif %}
 {% endblock %}

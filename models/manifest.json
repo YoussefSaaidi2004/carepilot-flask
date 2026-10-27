@@ -30,9 +30,12 @@
   },
   "hba1c": {
     "artifact": "hba1c_status.joblib",
-    "model": "Logistic regression, admission/history inputs",
+    "model": "Modèle séquentiel à deux étages",
     "target": "None / Norm / Anormal",
-    "warning": "Weakly supervised signal; always verify actual lab tests and results."
+    "f1_macro": 0.482,
+    "roc_auc": 0.767,
+    "accuracy": 74.9,
+    "warning": "Architecture à 2 étages (Étape 1 : Examen réalisé, Étape 2 : Anormal vs Norm). Conduite à tenir protocolée ADA."
   },
   "treatment_pattern": {
     "artifact": "treatment_pattern.joblib",

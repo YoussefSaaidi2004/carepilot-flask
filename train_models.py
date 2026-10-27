@@ -310,21 +310,134 @@ def main():
     joblib.dump({'scaler':scaler,'kmeans':km3,'features':PROFILE_FEATURES,'names':names,'silhouette_train_reference':silhouette,
                  'method':'KMeans k=3 sur 20 variables de traitement, clinique et consommation de soins'}, outdir/'care_profiles.joblib', compress=3)
 
-    # 4) HbA1c follow-up status: use only admission/profile/history variables in the interface.
-    a1c_features = ['age','gender','race','admission_type_id','admission_source_id','medical_specialty','diag_1',
-                    'number_outpatient','number_emergency','number_inpatient']
-    ah = df[df['A1Cresult'].astype(str).isin(['None','Norm','>7','>8'])].copy()
-    ya = ah['A1Cresult'].astype(str).replace({'>7':'Anormal','>8':'Anormal'})
-    Xa = ah[a1c_features].copy()
-    for c in ['number_outpatient','number_emergency','number_inpatient']:
-        Xa[c] = pd.to_numeric(Xa[c], errors='coerce')
-    for c in set(a1c_features)-{'number_outpatient','number_emergency','number_inpatient'}:
-        Xa[c] = Xa[c].astype('string').fillna('Inconnu').replace({'?':'Inconnu'}).astype(str)
-    a1c = cat_pipeline(a1c_features, Xa, LogisticRegression(max_iter=500, class_weight='balanced', random_state=SEED))
-    a1c.fit(Xa, ya)
-    joblib.dump({'pipeline':a1c,'features':a1c_features,'classes':['None','Norm','Anormal'],
-                 'class_labels':{'None':'Absence probable de test documenté','Norm':'Résultat HbA1c classé normal','Anormal':'Résultat HbA1c classé anormal'},
-                 'method':'Classification exploratoire à 3 classes, variables de profil/admission et visites antérieures'}, outdir/'hba1c_status.joblib', compress=3)
+    # 4) HbA1c follow-up status: Molka Jebali TwoStage CatBoost model
+    print('[HbA1c] Training TwoStageClassifier with CatBoost (Molka Jebali)...')
+    from catboost_model import CatWrap, TwoStageClassifier, group_diag, TE_COLS
+
+    df_h = df.sort_values('encounter_id').drop_duplicates(subset='patient_nbr', keep='first').copy()
+    def merge_target(val):
+        if val in ['>7', '>8']:
+            return 'Anormal'
+        return val
+    df_h['A1C_target'] = df_h['A1Cresult'].astype(str).apply(merge_target)
+    yh = df_h['A1C_target']
+
+    cols_to_drop = ['weight', 'payer_code', 'encounter_id']
+    df_h = df_h.drop(columns=[c for c in cols_to_drop if c in df_h.columns])
+    for col in ['medical_specialty', 'diag_1', 'diag_2', 'diag_3']:
+        df_h[col] = df_h[col].replace({'?': 'Missing', '': 'Missing'}).fillna('Missing')
+    race_mode = df_h['race'].replace({'?': np.nan}).mode()[0]
+    df_h['race'] = df_h['race'].replace({'?': race_mode})
+
+    near_constant = [col for col in df_h.columns if df_h[col].nunique() <= 1]
+    if near_constant:
+        df_h = df_h.drop(columns=near_constant)
+
+    raw_cat_h = pd.DataFrame({
+        'diag_1_3': df_h['diag_1'].astype(str).str[:3],
+        'diag_2_3': df_h['diag_2'].astype(str).str[:3],
+        'diag_3_3': df_h['diag_3'].astype(str).str[:3],
+        'specialty_cat': df_h['medical_specialty'].astype(str),
+        'discharge_cat': df_h['discharge_disposition_id'].astype(str),
+    }, index=df_h.index)
+
+    X_raw_h = df_h.drop(columns=['A1Cresult', 'A1C_target', 'patient_nbr'])
+    for col in ['diag_1', 'diag_2', 'diag_3']:
+        X_raw_h[col + '_group'] = X_raw_h[col].apply(group_diag)
+    X_raw_h = X_raw_h.drop(columns=['diag_1', 'diag_2', 'diag_3'])
+
+    age_order_h = ['[0-10)','[10-20)','[20-30)','[30-40)','[40-50)',
+                   '[50-60)','[60-70)','[70-80)','[80-90)','[90-100)']
+    age_map_h = {cat: i for i, cat in enumerate(age_order_h)}
+    X_raw_h['age_encoded'] = X_raw_h['age'].map(lambda a: age_map_h.get(a, 5))
+    X_raw_h = X_raw_h.drop(columns=['age'])
+
+    categorical_nominal_h = ['race', 'gender', 'medical_specialty',
+                             'diag_1_group', 'diag_2_group', 'diag_3_group',
+                             'max_glu_serum', 'change', 'diabetesMed']
+    non_num_h = X_raw_h.select_dtypes(exclude='number').columns.tolist()
+    med_cols_h = [c for c in non_num_h if c not in categorical_nominal_h]
+    categorical_nominal_h += med_cols_h
+
+    X_encoded_h = pd.get_dummies(X_raw_h, columns=categorical_nominal_h, drop_first=True)
+    num_cols_h = ['num_lab_procedures', 'num_procedures', 'num_medications',
+                  'number_outpatient', 'number_emergency', 'number_inpatient',
+                  'number_diagnoses', 'time_in_hospital']
+    scaler_h = StandardScaler()
+    X_encoded_h[num_cols_h] = scaler_h.fit_transform(X_encoded_h[num_cols_h].astype(float))
+
+    total_visits_h = df_h['number_outpatient'] + df_h['number_emergency'] + df_h['number_inpatient']
+    med_cols_raw_h = ['metformin','repaglinide','nateglinide','chlorpropamide','glimepiride',
+                      'glipizide','glyburide','pioglitazone','rosiglitazone','insulin']
+    present_meds_h = [m for m in med_cols_raw_h if m in df_h.columns]
+    nb_meds_ch_h = (df_h[present_meds_h] != 'No').sum(axis=1)
+
+    visit_scaler_h = StandardScaler()
+    med_ch_scaler_h = StandardScaler()
+    X_encoded_h['total_visits_prior'] = visit_scaler_h.fit_transform(total_visits_h.to_frame())
+    X_encoded_h['nb_meds_changed'] = med_ch_scaler_h.fit_transform(nb_meds_ch_h.to_frame())
+
+    days_h = df_h['time_in_hospital'].clip(lower=1)
+    grp_h = df_h[['diag_1', 'diag_2', 'diag_3']].apply(lambda col: col.map(group_diag))
+
+    X_encoded_h['meds_per_day'] = df_h['num_medications'] / days_h
+    X_encoded_h['labs_per_day'] = df_h['num_lab_procedures'] / days_h
+    X_encoded_h['diag_per_day'] = df_h['number_diagnoses'] / days_h
+    X_encoded_h['nb_meds_dose_changed'] = df_h[present_meds_h].isin(['Up', 'Down']).sum(axis=1)
+    X_encoded_h['insulin_dose_changed'] = df_h['insulin'].isin(['Up', 'Down']).astype(int) if 'insulin' in df_h.columns else 0
+    X_encoded_h['nb_diag_diabetes'] = (grp_h == 'Diabete').sum(axis=1)
+    X_encoded_h['nb_diag_groups'] = grp_h.nunique(axis=1)
+    X_encoded_h['has_prior_inpatient'] = (df_h['number_inpatient'] > 0).astype(int)
+    X_encoded_h['high_utilizer'] = (total_visits_h >= 3).astype(int)
+    X_encoded_h['emergency_admission'] = (df_h['admission_type_id'].astype(str) == '1').astype(int)
+    X_encoded_h['age_senior'] = (X_encoded_h['age_encoded'] >= 7).astype(int)
+    X_encoded_h['polypharmacy'] = (df_h['num_medications'] >= 15).astype(int)
+
+    clean_cols_h = [re.sub(r'[^0-9a-zA-Z_]+', '_', c) for c in X_encoded_h.columns]
+    X_encoded_h.columns = clean_cols_h
+    X_final_h = X_encoded_h.join(raw_cat_h)
+
+    X_tr_h, X_te_h, y_tr_h, y_te_h = train_test_split(X_final_h, yh, test_size=0.2, random_state=42, stratify=yh)
+    model_h = TwoStageClassifier(stage1=CatWrap(iterations=300), stage2=CatWrap(iterations=300))
+    model_h.fit(X_tr_h, y_tr_h)
+
+    preds_h = model_h.predict(X_te_h)
+    probs_h = model_h.predict_proba(X_te_h)
+    f1_mh = float(f1_score(y_te_h, preds_h, average='macro'))
+    acc_h = float(accuracy_score(y_te_h, preds_h))
+    roc_h = float(roc_auc_score(pd.get_dummies(y_te_h), probs_h, multi_class='ovr'))
+
+    medians_h = {col: float(df_h[col].median()) for col in num_cols_h if col in df_h.columns}
+    medians_h['number_diagnoses'] = float(df_h['number_diagnoses'].median())
+    modes_h = {
+        'race': race_mode, 'gender': 'Female', 'medical_specialty': 'Missing',
+        'admission_type_id': '1', 'admission_source_id': '7', 'discharge_disposition_id': '1',
+        'change': 'No', 'diabetesMed': 'Yes', 'max_glu_serum': 'None', 'insulin': 'No'
+    }
+
+    joblib.dump({
+        'model': model_h,
+        'model_name': 'Modèle séquentiel à deux étages',
+        'classes': list(model_h.classes_),
+        'feature_names': list(X_final_h.columns),
+        'dummy_columns': list(X_encoded_h.columns),
+        'scaler': scaler_h,
+        'num_cols': num_cols_h,
+        'visit_scaler': visit_scaler_h,
+        'med_ch_scaler': med_ch_scaler_h,
+        'age_map': age_map_h,
+        'categorical_nominal': categorical_nominal_h,
+        'medians': medians_h,
+        'modes': modes_h,
+        'f1_macro': round(f1_mh, 3),
+        'accuracy': round(acc_h * 100, 1),
+        'roc_auc': round(roc_h, 3),
+        'class_labels': {
+            'None': 'Absence probable de test documenté',
+            'Norm': 'Résultat HbA1c normalisé (< 7%)',
+            'Anormal': 'Résultat HbA1c anormal (> 7% ou > 8%)'
+        }
+    }, outdir/'hba1c_status.joblib', compress=3)
 
     # 5) Observed treatment pattern (not a prescription): insulin OR metformin in historical record.
     tx_features = ['age','gender','race','admission_type_id','admission_source_id','diag_1','diag_2','diag_3',
@@ -352,7 +465,7 @@ def main():
       'readmission': {'artifact':'readmission.joblib','model':'XGBoost Classifier (optimisé)','threshold':best_t,'accuracy':round(best_acc*100,2),'roc_auc':round(te_auc,4),'target':'readmitted != NO','warning':'Modèle XGBoost entraîné pour maximiser la précision globale (Accuracy test: ~64%, ROC-AUC: ~0.69).'},
       'care_load': {'artifact':'care_load.joblib','model':'Logistic regression trained against a KMeans proxy label','target':'High care-load cluster proxy','warning':'Predicts a cluster-derived class, not a validated clinical endpoint.'},
       'care_profile': {'artifact':'care_profiles.joblib','model':'KMeans k=3','target':'Care-management profile','warning':'Profiles describe recorded management patterns, not diabetes types or treatment recommendations.'},
-      'hba1c': {'artifact':'hba1c_status.joblib','model':'Logistic regression, admission/history inputs','target':'None / Norm / Anormal','warning':'Weakly supervised signal; always verify actual lab tests and results.'},
+      'hba1c': {'artifact':'hba1c_status.joblib','model':'Modèle séquentiel à deux étages','f1_macro':round(f1_mh,3),'roc_auc':round(roc_h,3),'accuracy':round(acc_h*100,1),'target':'None / Norm / Anormal','warning':'Architecture à 2 étages (Étape 1 : Examen réalisé, Étape 2 : Anormal vs Norm). Conduite à tenir protocolée ADA.'},
       'treatment_pattern': {'artifact':'treatment_pattern.joblib','model':'Logistic regression','target':'Insulin or metformin observed in historical record','warning':'This is not a medication recommendation.'}
     }
     (outdir/'manifest.json').write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding='utf-8')

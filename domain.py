@@ -101,11 +101,20 @@ TASKS = {
  },
  'hba1c': {
   'title':'Surveillance HbA1c','short':'Surveillance HbA1c','group':'Prévention et suivi','icon':'droplet','color':'rose',
-  'description':'Classer le statut le plus probable du suivi HbA1c — absence de test, résultat normal ou résultat anormal — à partir du profil d’admission et des visites antérieures.',
-  'objective':'Repérer les dossiers dont le suivi biologique mérite une vérification','model':'Régression logistique exploratoire','target':'None / Norm / Anormal','kind':'multiclass','threshold':None,
-  'positive':'','negative':'','note':'Vérifiez toujours le résultat du laboratoire et les dates. Une classe “absence de test” signifie que le dataset historique ne documente pas de test; ce n’est pas une interprétation biologique.',
-  'fields':set(['age','gender','race','admission_type_id','admission_source_id','medical_specialty','diag_1','number_outpatient','number_emergency','number_inpatient']),
-  'stages':{1:['age','gender','race'],2:['admission_type_id','admission_source_id','medical_specialty'],3:['diag_1'],4:['number_outpatient','number_emergency','number_inpatient']},
+  'description':'Classer le statut du suivi HbA1c (absence de test, résultat normal ou anormal) via une architecture séquentielle à deux étages.',
+  'objective':'Repérer les omissions de dépistage (protocole ADA) et les risques de déséquilibre glycémique',
+  'model':'Modèle séquentiel à deux étages','target':'None / Norm / Anormal','kind':'multiclass','threshold':None,
+  'positive':'','negative':'',
+  'note':'Architecture séquentielle à deux étages optimisée pour le dépistage ciblé (F1-macro: 0.482, ROC-AUC: 0.767). Étage 1 : examen réalisé ou non. Étage 2 : résultat normal vs anormal.',
+  'fields':set(['age','gender','race','admission_type_id','admission_source_id','medical_specialty',
+                'diag_1','diag_2','diag_3','num_lab_procedures','num_procedures','num_medications','time_in_hospital','number_diagnoses',
+                'number_outpatient','number_emergency','number_inpatient','insulin','metformin','change','diabetesMed','max_glu_serum']),
+  'stages':{
+    1:['age','gender','race'],
+    2:['admission_type_id','admission_source_id','medical_specialty'],
+    3:['diag_1','diag_2','diag_3','num_lab_procedures','num_procedures','num_medications','time_in_hospital','number_diagnoses'],
+    4:['number_outpatient','number_emergency','number_inpatient','insulin','metformin','change','diabetesMed','max_glu_serum']
+  },
  },
  'treatment-pattern': {
   'title':'Profil thérapeutique','short':'Profil thérapeutique','group':'Revue pharmaceutique','icon':'pill','color':'blue',

@@ -253,6 +253,58 @@ def _save_assessment(task_id: str, payload: dict, result: dict) -> int:
     return int(record_id)
 
 
+@app.route('/tasks/hba1c/demo/<demo_id>')
+@login_required
+def load_hba1c_demo(demo_id):
+    demos = {
+        'cas-1': {
+            'title': 'Cas 1 : Risque Anormal Élevé (> 7%)',
+            'payload': {
+                'patient_ref': 'CAS-01-DESEQUILIBRE',
+                'age': '[70-80)', 'gender': 'Female', 'race': 'Caucasian',
+                'admission_type_id': '1', 'admission_source_id': '7', 'medical_specialty': 'Emergency/Trauma',
+                'diag_1': '250.02', 'diag_2': '401', 'diag_3': '428',
+                'num_lab_procedures': '65', 'num_procedures': '2', 'num_medications': '22',
+                'time_in_hospital': '8', 'number_diagnoses': '9',
+                'number_outpatient': '1', 'number_emergency': '2', 'number_inpatient': '3',
+                'insulin': 'Up', 'metformin': 'Steady', 'change': 'Ch', 'diabetesMed': 'Yes', 'max_glu_serum': '>300'
+            }
+        },
+        'cas-2': {
+            'title': 'Cas 2 : Omission Dépistage (Protocole ADA)',
+            'payload': {
+                'patient_ref': 'CAS-02-OMISSION-ADA',
+                'age': '[60-70)', 'gender': 'Male', 'race': 'AfricanAmerican',
+                'admission_type_id': '3', 'admission_source_id': '1', 'medical_specialty': 'Cardiology',
+                'diag_1': '414', 'diag_2': '411', 'diag_3': '250',
+                'num_lab_procedures': '18', 'num_procedures': '1', 'num_medications': '7',
+                'time_in_hospital': '2', 'number_diagnoses': '5',
+                'number_outpatient': '0', 'number_emergency': '0', 'number_inpatient': '0',
+                'insulin': 'No', 'metformin': 'Steady', 'change': 'No', 'diabetesMed': 'Yes', 'max_glu_serum': 'None'
+            }
+        },
+        'cas-3': {
+            'title': 'Cas 3 : Surveillance Standard / Profil Modéré',
+            'payload': {
+                'patient_ref': 'CAS-03-STABILISE',
+                'age': '[40-50)', 'gender': 'Female', 'race': 'Caucasian',
+                'admission_type_id': '1', 'admission_source_id': '7', 'medical_specialty': 'Emergency/Trauma',
+                'diag_1': '414', 'diag_2': '401', 'diag_3': '272',
+                'num_lab_procedures': '25', 'num_procedures': '1', 'num_medications': '6',
+                'time_in_hospital': '2', 'number_diagnoses': '4',
+                'number_outpatient': '0', 'number_emergency': '0', 'number_inpatient': '0',
+                'insulin': 'No', 'metformin': 'Steady', 'change': 'No', 'diabetesMed': 'Yes', 'max_glu_serum': 'Norm'
+            }
+        }
+    }
+    if demo_id not in demos:
+        abort(404)
+    demo = demos[demo_id]
+    save_wizard('hba1c', demo['payload'], {})
+    flash(f"Profil clinique « {demo['title']} » chargé. Toutes les étapes sont pré-remplies : vous pouvez vérifier les données ou lancer l'analyse immédiatement.", "success")
+    return redirect(url_for('task_step', task_id='hba1c', step=5))
+
+
 @app.route('/tasks/<task_id>')
 @login_required
 def start_task(task_id):
